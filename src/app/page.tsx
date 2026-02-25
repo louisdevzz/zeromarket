@@ -41,7 +41,7 @@ export default async function HomePage() {
           <div className="flex items-center justify-center gap-3 rounded-2xl border border-[#1e1e1e] bg-[#0a0a0a]/80 backdrop-blur-sm max-w-lg mx-auto px-6 py-4 mb-10">
             <span className="text-[#f97316] font-mono text-sm shrink-0">$</span>
             <code className="font-mono text-sm text-[#f0f0f0] flex-1 text-left">
-              zeroclaw skill install zeroclaw/weather
+              zeroclaw skill install &lt;namespace&gt;/&lt;skill&gt;
             </code>
           </div>
 
