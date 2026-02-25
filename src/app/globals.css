@@ -1,26 +1,96 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
+  --color-zc-bg: #080808;
+  --color-zc-surface: #0f0f0f;
+  --color-zc-elevated: #161616;
+  --color-zc-border: #1e1e1e;
+  --color-zc-border-dim: #141414;
+  --color-zc-text: #f0f0f0;
+  --color-zc-muted: #707070;
+  --color-zc-dim: #3a3a3a;
+  --color-zc-orange: #f97316;
+  --color-zc-orange-dim: #7c3912;
+  --color-zc-orange-glow: rgba(249, 115, 22, 0.15);
+  --color-zc-green: #22c55e;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #080808;
+  color: #f0f0f0;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
+}
+
+/* Selection */
+::selection {
+  background: rgba(249, 115, 22, 0.25);
+  color: #f0f0f0;
+}
+
+/* Claw mark decoration */
+.claw-mark {
+  position: relative;
+}
+.claw-mark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(249, 115, 22, 0.03) 8px,
+    rgba(249, 115, 22, 0.03) 9px
+  );
+  pointer-events: none;
+}
+
+/* Orange glow utility */
+.glow-orange {
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.3), 0 0 20px rgba(249, 115, 22, 0.1);
+}
+
+/* Grid background for hero */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(249, 115, 22, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249, 115, 22, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Code block */
+.code-block {
+  font-family: var(--font-geist-mono), "Fira Code", monospace;
+  background: #0f0f0f;
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 12px 16px;
 }
