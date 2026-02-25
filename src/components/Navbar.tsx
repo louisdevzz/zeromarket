@@ -3,8 +3,17 @@ import { auth } from "@/lib/auth";
 import { SignInButton } from "./AuthButton";
 import UserDropdown from "./UserDropdown";
 
+interface SessionUser {
+  username: string;
+  githubId: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 export default async function Navbar() {
   const session = await auth();
+  const user = session?.user as SessionUser | undefined;
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#1e1e1e] bg-[#080808]/90 backdrop-blur-md">
@@ -34,7 +43,7 @@ export default async function Navbar() {
 
         {/* Right */}
         <div className="flex items-center gap-3">
-          {session?.user ? (
+          {user ? (
             <>
               <Link
                 href="/upload"
@@ -43,8 +52,8 @@ export default async function Navbar() {
                 + Publish
               </Link>
               <UserDropdown
-                username={session.user.username ?? session.user.name ?? "user"}
-                avatar={session.user.image}
+                username={user.username ?? user.name ?? "user"}
+                avatar={user.image}
               />
             </>
           ) : (

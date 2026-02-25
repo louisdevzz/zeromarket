@@ -9,8 +9,8 @@ declare module "next-auth" {
   }
 
   interface User {
-    username?: string;
-    githubId?: string;
+    username: string;
+    githubId: string;
   }
 }
 

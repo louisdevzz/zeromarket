@@ -67,8 +67,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }) {
       if (token) {
-        session.user.username = (token.username as string) ?? "";
-        session.user.githubId = (token.githubId as string) ?? "";
+        (session.user as unknown as { username: string; githubId: string }).username = (token.username as string) ?? "";
+        (session.user as unknown as { username: string; githubId: string }).githubId = (token.githubId as string) ?? "";
       }
       return session;
     },

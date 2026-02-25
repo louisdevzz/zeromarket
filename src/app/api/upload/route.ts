@@ -11,14 +11,23 @@ interface ManifestJson {
   description?: string;
 }
 
+interface SessionUser {
+  username: string;
+  githubId: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 export async function POST(request: NextRequest) {
   // Auth check
   const session = await auth();
-  if (!session?.user?.username) {
+  const user = session?.user as SessionUser | undefined;
+  if (!user?.username) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const namespace = session.user.username;
+  const namespace = user.username;
 
   let formData: FormData;
   try {
@@ -177,7 +186,7 @@ export async function POST(request: NextRequest) {
       readme,
       downloads: 0,
       verified: false,
-      author_id: `u_${session.user.githubId}`,
+      author_id: `u_${user.githubId}`,
     });
   }
 

@@ -396,7 +396,7 @@ export default function UploadPage() {
                     {uploading ? "Publishing…" : "Publish Skill"}
                   </button>
                   <span className="text-sm text-[#505050] font-mono">
-                    signed in as @{session.user.username}
+                    signed in as @{(session.user as { username: string }).username}
                   </span>
                 </>
               )}
