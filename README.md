@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ZeroMarket
+
+The official WASM skill registry for [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) — browse, install, and publish tool packages for your autonomous agent.
+
+## What is ZeroMarket?
+
+ZeroMarket is a registry where developers can publish **WASM skill packages** — compiled WebAssembly tools that ZeroClaw agents can install and use. Skills follow a simple stdin/stdout protocol, so any language that compiles to WebAssembly works: Rust, TypeScript (Javy), Go (TinyGo), Python (componentize-py), and more.
+
+```bash
+# Install a skill in one command
+zeroclaw skill install zeroclaw/weather-lookup
+
+# The agent can use it immediately
+zeroclaw agent -m "What's the weather in Hanoi?"
+```
+
+## Tech Stack
+
+- **Framework** — Next.js 15 (App Router)
+- **Styling** — Tailwind CSS v4
+- **Auth** — NextAuth v5 (GitHub OAuth)
+- **Database** — PostgreSQL + Drizzle ORM
+- **Package Manager** — pnpm
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- PostgreSQL database
+
+### Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# GitHub OAuth — create at https://github.com/settings/developers
+AUTH_GITHUB_ID=your-github-oauth-app-client-id
+AUTH_GITHUB_SECRET=your-github-oauth-app-client-secret
+AUTH_SECRET=your-random-secret-string
 
-## Learn More
+# PostgreSQL
+DATABASE_URL=postgresql://user:password@localhost:5432/zeromarket
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Database setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm db:push
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Run development server
 
-## Deploy on Vercel
+```bash
+pnpm dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Skill Protocol
+
+Every ZeroMarket skill is a WASM binary that reads JSON from stdin and writes JSON to stdout:
+
+```
+// stdin → args from LLM
+{"city": "Hanoi"}
+
+// stdout → result
+{"success": true, "output": "Hanoi: 28.5°C, Partly Cloudy"}
+```
+
+Required files for publishing:
+
+| File | Required | Description |
+|------|----------|-------------|
+| `tool.wasm` | ✓ | Compiled WASM binary |
+| `manifest.json` | ✓ | Tool name, description, parameters schema |
+| `SKILL.md` | ✓ | Skill documentation and usage |
+| `README.md` | — | Optional additional docs |
+
+## Creating a Skill
+
+```bash
+# Scaffold from a working template
+zeroclaw skill new my_tool --template weather_lookup  # Rust
+zeroclaw skill new my_tool --template calculator      # Rust
+zeroclaw skill new my_tool --template hello_world     # TypeScript
+zeroclaw skill new my_tool --template word_count      # Go
+
+# Build (Rust example)
+cd my_tool
+cargo build --target wasm32-wasip1 --release
+cp target/wasm32-wasip1/release/my_tool.wasm tool.wasm
+
+# Test locally
+zeroclaw skill test . --args '{"city":"hanoi"}'
+
+# Publish to ZeroMarket — drop the folder at https://zeromarket.dev/upload
+# (source code and build artifacts are filtered automatically)
+```
+
+## Installing a Skill
+
+```bash
+# From ZeroMarket registry
+zeroclaw skill install namespace/skill-name
+
+# From local path
+zeroclaw skill install ./my_tool
+
+# From git
+zeroclaw skill install https://github.com/user/my-skill
+
+# List installed skills
+zeroclaw skill list
+```
+
+## API
+
+The registry exposes a REST API consumed by `zeroclaw skill install`:
+
+```
+GET /api/v1/packages/:namespace/:name
+→ { name, version, description, tools: [{ name, wasm_url, manifest_url }] }
+```
+
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](https://github.com/zeroclaw-labs/zeroclaw/blob/main/CONTRIBUTING.md).
+
+---
+
+Built by [Potluck Labs, Inc](https://potlock.org)

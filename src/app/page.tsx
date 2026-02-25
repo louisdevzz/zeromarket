@@ -190,9 +190,22 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className="border-t border-[#1e1e1e] mt-8">
         <div className="mx-auto max-w-7xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#505050]">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#f97316]">ZeroMarket</span>
-            <span>— The ZeroClaw skill registry</span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#f97316]">ZeroMarket</span>
+              <span>— The ZeroClaw skill registry</span>
+            </div>
+            <div className="text-xs text-[#3a3a3a]">
+              Built by{" "}
+              <a
+                href="https://potlock.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#505050] hover:text-[#a0a0a0] transition-colors"
+              >
+                Potluck Labs, Inc
+              </a>
+            </div>
           </div>
           <div className="flex items-center gap-6">
             <a href="https://docs.zeromarket.dev" className="hover:text-[#a0a0a0] transition-colors">Docs</a>
