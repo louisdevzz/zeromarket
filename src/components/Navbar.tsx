@@ -57,7 +57,7 @@ export default async function Navbar() {
               />
             </>
           ) : (
-            <SignInButton className="flex items-center gap-2.5 rounded-full bg-[#f0f0f0] px-5 py-2 text-sm font-semibold text-black hover:bg-white transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_28px_rgba(249,115,22,0.4)]">
+            <SignInButton className="flex cursor-default items-center gap-2.5 rounded-full bg-[#f0f0f0] px-5 py-2 text-sm font-semibold text-black hover:bg-white transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_28px_rgba(249,115,22,0.4)]">
               <GitHubIcon className="h-4 w-4" />
               Sign in with GitHub
             </SignInButton>

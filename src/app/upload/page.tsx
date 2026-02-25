@@ -315,7 +315,7 @@ export default function UploadPage() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="mt-3 rounded-md border border-[#1e1e1e] bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-[#a0a0a0] hover:border-[#f97316]/40 hover:text-[#f0f0f0] transition-colors"
+                    className="cursor-default mt-3 rounded-md border border-[#1e1e1e] bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-[#a0a0a0] hover:border-[#f97316]/40 hover:text-[#f0f0f0] transition-colors"
                   >
                     Choose Folder
                   </button>
@@ -409,7 +409,7 @@ export default function UploadPage() {
               ) : !session ? (
                 <button
                   onClick={() => signIn("github")}
-                  className="flex items-center gap-2 rounded-full bg-[#f97316] px-5 py-2.5 text-sm font-semibold text-black hover:bg-[#fb923c] transition-colors"
+                  className="cursor-default flex items-center gap-2 rounded-full bg-[#f97316] px-5 py-2.5 text-sm font-semibold text-black hover:bg-[#fb923c] transition-colors"
                 >
                   <GitHubIcon className="h-4 w-4" />
                   Sign in with GitHub to publish
@@ -419,7 +419,7 @@ export default function UploadPage() {
                   <button
                     onClick={handlePublish}
                     disabled={!isValid || uploading}
-                    className="rounded-full bg-[#f97316] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#fb923c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="cursor-default rounded-full bg-[#f97316] px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#fb923c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {uploading ? "Publishing…" : "Publish Skill"}
                   </button>

@@ -30,7 +30,7 @@ export default function UserDropdown({ username, avatar }: Props) {
       {/* Trigger */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2.5 rounded-full border border-[#1e1e1e] bg-[#0f0f0f] px-3 py-1.5 hover:border-[#2e2e2e] transition-colors"
+        className="cursor-default flex items-center gap-2.5 rounded-full border border-[#1e1e1e] bg-[#0f0f0f] px-3 py-1.5 hover:border-[#2e2e2e] transition-colors"
       >
         {avatar ? (
           <Image
@@ -88,7 +88,7 @@ export default function UserDropdown({ username, avatar }: Props) {
           <div className="border-t border-[#1a1a1a] py-1">
             <button
               onClick={() => { setOpen(false); signOut(); }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#707070] hover:bg-[#161616] hover:text-[#f87171] transition-colors"
+              className="cursor-default flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#707070] hover:bg-[#161616] hover:text-[#f87171] transition-colors"
             >
               <SignOutIcon className="h-4 w-4" />
               Sign out

@@ -28,7 +28,7 @@ export default function InstallCommand({ namespace, name, version }: Props) {
       </div>
       <button
         onClick={copy}
-        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#1e1e1e] px-3 py-1.5 text-xs text-[#a0a0a0] transition-all hover:border-[#f97316]/40 hover:text-[#f0f0f0] active:scale-95"
+        className="cursor-default shrink-0 flex items-center gap-1.5 rounded-lg border border-[#1e1e1e] px-3 py-1.5 text-xs text-[#a0a0a0] transition-all hover:border-[#f97316]/40 hover:text-[#f0f0f0] active:scale-95"
       >
         {copied ? (
           <>
