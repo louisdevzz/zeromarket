@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Navbar from "@/components/Navbar";
 import InstallCommand from "@/components/InstallCommand";
 import { getPackage, formatDownloads } from "@/lib/data";
@@ -183,28 +185,94 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
 }
 
 function ReadmeRenderer({ content }: { content: string }) {
-  // Simple markdown-ish rendering without a library
-  const lines = content.split("\n");
   return (
-    <div className="space-y-2 text-sm leading-relaxed">
-      {lines.map((line, i) => {
-        if (line.startsWith("### "))
-          return <h3 key={i} className="text-base font-semibold text-[#f0f0f0] mt-4">{line.slice(4)}</h3>;
-        if (line.startsWith("## "))
-          return <h2 key={i} className="text-lg font-semibold text-[#f0f0f0] mt-5">{line.slice(3)}</h2>;
-        if (line.startsWith("# "))
-          return <h1 key={i} className="text-xl font-bold text-[#f0f0f0] mt-2">{line.slice(2)}</h1>;
-        if (line.startsWith("```"))
-          return null;
-        if (line.startsWith("  ") || line.match(/^\s*"/) )
-          return (
-            <code key={i} className="block font-mono text-xs text-[#a0a0a0] bg-[#0a0a0a] border border-[#1a1a1a] rounded px-3 py-1.5">
-              {line.trim()}
+    <div className="prose prose-invert prose-sm max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+        h1: ({ children }) => (
+          <h1 className="text-2xl font-bold text-[#f0f0f0] mt-0 mb-4 pb-2 border-b border-[#1e1e1e]">
+            {children}
+          </h1>
+        ),
+        h2: ({ children }) => (
+          <h2 className="text-xl font-semibold text-[#f0f0f0] mt-8 mb-3">
+            {children}
+          </h2>
+        ),
+        h3: ({ children }) => (
+          <h3 className="text-lg font-semibold text-[#f0f0f0] mt-6 mb-2">
+            {children}
+          </h3>
+        ),
+        p: ({ children }) => (
+          <p className="text-[#a0a0a0] leading-relaxed mb-4">
+            {children}
+          </p>
+        ),
+        a: ({ href, children }) => (
+          <a
+            href={href}
+            className="text-[#f97316] hover:text-[#fb923c] transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {children}
+          </a>
+        ),
+        code: ({ children, className }) => {
+          const isInline = !className;
+          return isInline ? (
+            <code className="font-mono text-sm bg-[#1a1a1a] text-[#f0f0f0] px-1.5 py-0.5 rounded">
+              {children}
             </code>
+          ) : (
+            <pre className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg p-4 overflow-x-auto my-4">
+              <code className={`${className} font-mono text-sm text-[#a0a0a0]`}>
+                {children}
+              </code>
+            </pre>
           );
-        if (line === "") return <div key={i} className="h-1" />;
-        return <p key={i} className="text-[#a0a0a0]">{line}</p>;
-      })}
+        },
+        ul: ({ children }) => (
+          <ul className="list-disc list-inside text-[#a0a0a0] space-y-1 mb-4 pl-2">
+            {children}
+          </ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="list-decimal list-inside text-[#a0a0a0] space-y-1 mb-4 pl-2">
+            {children}
+          </ol>
+        ),
+        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+        blockquote: ({ children }) => (
+          <blockquote className="border-l-2 border-[#f97316] pl-4 italic text-[#707070] my-4">
+            {children}
+          </blockquote>
+        ),
+        hr: () => <hr className="border-[#1e1e1e] my-6" />,
+        table: ({ children }) => (
+          <table className="w-full text-sm text-left text-[#a0a0a0] border border-[#1e1e1e] rounded-lg overflow-hidden my-4">
+            {children}
+          </table>
+        ),
+        thead: ({ children }) => (
+          <thead className="bg-[#1a1a1a] text-[#f0f0f0]">{children}</thead>
+        ),
+        th: ({ children }) => (
+          <th className="px-4 py-3 font-semibold">{children}</th>
+        ),
+        td: ({ children }) => (
+          <td className="px-4 py-3 border-t border-[#1e1e1e]">{children}</td>
+        ),
+        strong: ({ children }) => (
+          <strong className="text-[#f0f0f0] font-semibold">{children}</strong>
+        ),
+        em: ({ children }) => <em className="italic">{children}</em>,
+      }}
+    >
+      {content}
+    </ReactMarkdown>
     </div>
   );
 }

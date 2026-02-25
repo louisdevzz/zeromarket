@@ -6,6 +6,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey().default("gen_random_uuid()"),
@@ -16,6 +17,10 @@ export const users = pgTable("users", {
   email: text("email"),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  packages: many(packages),
+}));
 
 export const packages = pgTable(
   "packages",
@@ -38,6 +43,14 @@ export const packages = pgTable(
   (table) => [uniqueIndex("packages_namespace_slug_idx").on(table.namespace, table.slug)]
 );
 
+export const packagesRelations = relations(packages, ({ one, many }) => ({
+  author: one(users, {
+    fields: [packages.author_id],
+    references: [users.id],
+  }),
+  tools: many(tools),
+}));
+
 export const tools = pgTable("tools", {
   id: text("id").primaryKey().default("gen_random_uuid()"),
   name: text("name").notNull(),
@@ -48,6 +61,13 @@ export const tools = pgTable("tools", {
     onDelete: "cascade",
   }),
 });
+
+export const toolsRelations = relations(tools, ({ one }) => ({
+  package: one(packages, {
+    fields: [tools.package_id],
+    references: [packages.id],
+  }),
+}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import SkillCard from "@/components/SkillCard";
-import { PACKAGES, CATEGORIES, formatDownloads } from "@/lib/data";
+import { CATEGORIES, formatDownloads, getAllPackages } from "@/lib/data";
 
-export default function HomePage() {
-  const featured = PACKAGES.filter((p) => p.verified);
-  const totalDownloads = PACKAGES.reduce((s, p) => s + p.downloads, 0);
+export default async function HomePage() {
+  const allPackages = await getAllPackages();
+  const featured = allPackages.filter((p) => p.verified);
+  const totalDownloads = allPackages.reduce((s, p) => s + p.downloads, 0);
 
   return (
     <div className="min-h-screen bg-[#080808]">
@@ -50,7 +51,7 @@ export default function HomePage() {
               href="/browse"
               className="rounded-full bg-[#f97316] px-6 py-3 text-sm font-semibold text-black hover:bg-[#fb923c] transition-colors shadow-[0_0_20px_rgba(249,115,22,0.3)]"
             >
-              Browse {PACKAGES.length} skills
+              Browse {allPackages.length} skills
             </Link>
             <a
               href="https://docs.zeromarket.dev/publish"
@@ -66,7 +67,7 @@ export default function HomePage() {
       <section className="border-b border-[#1e1e1e] bg-[#0a0a0a]">
         <div className="mx-auto max-w-7xl px-6 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
-            { value: PACKAGES.length.toString(), label: "Skills" },
+            { value: allPackages.length.toString(), label: "Skills" },
             { value: formatDownloads(totalDownloads), label: "Installs" },
             { value: "4", label: "Languages" },
             { value: "100%", label: "WASI sandbox" },
@@ -100,32 +101,36 @@ export default function HomePage() {
         </section>
 
         {/* ── Featured / Official ── */}
-        <section>
-          <SectionHeader
-            title="Official Skills"
-            subtitle="Maintained by the ZeroClaw team"
-            href="/browse?namespace=zeroclaw"
-          />
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featured.map((pkg) => (
-              <SkillCard key={`${pkg.namespace}/${pkg.name}`} pkg={pkg} />
-            ))}
-          </div>
-        </section>
+        {featured.length > 0 && (
+          <section>
+            <SectionHeader
+              title="Official Skills"
+              subtitle="Maintained by the ZeroClaw team"
+              href="/browse?namespace=zeroclaw"
+            />
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featured.map((pkg) => (
+                <SkillCard key={`${pkg.namespace}/${pkg.name}`} pkg={pkg} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Community ── */}
-        <section>
-          <SectionHeader
-            title="Community Skills"
-            subtitle="Built and shared by the community"
-            href="/browse?namespace=community"
-          />
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PACKAGES.filter((p) => !p.verified).map((pkg) => (
-              <SkillCard key={`${pkg.namespace}/${pkg.name}`} pkg={pkg} />
-            ))}
-          </div>
-        </section>
+        {allPackages.filter((p) => !p.verified).length > 0 && (
+          <section>
+            <SectionHeader
+              title="Community Skills"
+              subtitle="Built and shared by the community"
+              href="/browse"
+            />
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allPackages.filter((p) => !p.verified).map((pkg) => (
+                <SkillCard key={`${pkg.namespace}/${pkg.name}`} pkg={pkg} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── How it works ── */}
         <section className="rounded-2xl border border-[#1e1e1e] bg-[#0f0f0f] overflow-hidden">
@@ -170,7 +175,7 @@ export default function HomePage() {
                 <span className="text-[#505050]">{"// stdin → args from LLM"}</span>
                 <br />
                 <span className="text-[#f97316]">{"{"}</span>
-                <span className="text-[#a0a0a0]">{'"city": "Hanoi"'}</span>
+                <span className="text-[#a0a0a0]">&quot;city&quot;: &quot;Hanoi&quot;</span>
                 <span className="text-[#f97316]">{"}"}</span>
               </div>
               <div className="hidden sm:flex items-center text-[#2e2e2e] text-lg">→</div>
@@ -178,8 +183,8 @@ export default function HomePage() {
                 <span className="text-[#505050]">{"// stdout → result"}</span>
                 <br />
                 <span className="text-[#f97316]">{"{"}</span>
-                <span className="text-[#22c55e]">"success": true</span>
-                <span className="text-[#a0a0a0]">{', "output": "…"'}</span>
+                <span className="text-[#22c55e]">&quot;success&quot;: true</span>
+                <span className="text-[#a0a0a0]">, &quot;output&quot;: &quot;…&quot;</span>
                 <span className="text-[#f97316]">{"}"}</span>
               </div>
             </div>

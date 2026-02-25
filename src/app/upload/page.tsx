@@ -327,84 +327,90 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {/* Top-right: Drop zone */}
+              {/* Top-right: Drop zone / File list */}
               <div className={panelClass}>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xs font-semibold uppercase tracking-widest text-[#505050]">
-                    Drop a Folder
+                    {files.length > 0 ? "Files" : "Drop a Folder"}
                   </h2>
                   {files.length > 0 && (
-                    <span className="text-[11px] text-[#505050]">
-                      {files.length} file{files.length !== 1 ? "s" : ""} ·{" "}
-                      {formatBytes(totalSize)}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="cursor-default rounded-md border border-[#1e1e1e] bg-[#0a0a0a] px-3 py-1.5 text-xs font-semibold text-[#a0a0a0] hover:border-[#f97316]/40 hover:text-[#f0f0f0] transition-colors"
+                    >
+                      Change
+                    </button>
                   )}
                 </div>
 
-                <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className={`rounded-lg border-dashed border-2 transition-colors p-6 text-center ${
-                    isDragging
-                      ? "border-[#f97316] bg-[#f97316]/5"
-                      : "border-[#f97316]/40"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-[#a0a0a0] mb-1">
-                    Drop your skill folder here
-                  </p>
-                  <p className="text-xs text-[#505050] mb-1">
-                    Only <span className="font-mono text-[#707070]">tool.wasm</span>,{" "}
-                    <span className="font-mono text-[#707070]">manifest.json</span>,{" "}
-                    <span className="font-mono text-[#707070]">SKILL.md</span>,{" "}
-                    <span className="font-mono text-[#707070]">README.md</span>{" "}
-                    will be uploaded — source code and build artifacts are filtered out automatically.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="cursor-default mt-3 rounded-md border border-[#1e1e1e] bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-[#a0a0a0] hover:border-[#f97316]/40 hover:text-[#f0f0f0] transition-colors"
+                {files.length === 0 ? (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`rounded-lg border-dashed border-2 transition-colors p-6 text-center ${
+                      isDragging
+                        ? "border-[#f97316] bg-[#f97316]/5"
+                        : "border-[#f97316]/40"
+                    }`}
                   >
-                    Choose Folder
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    // @ts-expect-error webkitdirectory is non-standard but widely supported
-                    webkitdirectory="true"
-                    className="hidden"
-                    onChange={handleFileInput}
-                  />
-                </div>
-
-                <div className="mt-4">
-                  {files.length === 0 ? (
-                    <p className="text-xs text-[#3a3a3a]">No files selected.</p>
-                  ) : (
-                    <ul className="space-y-1">
+                    <p className="text-sm font-medium text-[#a0a0a0] mb-1">
+                      Drop your skill folder here
+                    </p>
+                    <p className="text-xs text-[#505050] mb-1">
+                      Only <span className="font-mono text-[#707070]">tool.wasm</span>,{" "}
+                      <span className="font-mono text-[#707070]">manifest.json</span>,{" "}
+                      <span className="font-mono text-[#707070]">SKILL.md</span>,{" "}
+                      <span className="font-mono text-[#707070]">README.md</span>{" "}
+                      will be uploaded — source code and build artifacts are filtered out automatically.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="cursor-default mt-3 rounded-md border border-[#1e1e1e] bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-[#a0a0a0] hover:border-[#f97316]/40 hover:text-[#f0f0f0] transition-colors"
+                    >
+                      Choose Folder
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-[#1e1e1e] bg-[#0a0a0a] p-4">
+                    <div className="flex items-center justify-between text-xs text-[#505050] mb-3 pb-3 border-b border-[#1e1e1e]">
+                      <span>{files.length} file{files.length !== 1 ? "s" : ""}</span>
+                      <span>{formatBytes(totalSize)}</span>
+                    </div>
+                    <ul className="space-y-2 max-h-[200px] overflow-y-auto">
                       {displayedFiles.map((entry, i) => (
                         <li
                           key={i}
                           className="flex items-center justify-between gap-2 text-xs"
                         >
-                          <span className="truncate text-[#707070] font-mono">
+                          <span className="truncate text-[#a0a0a0] font-mono">
                             {entry.relativePath}
                           </span>
-                          <span className="shrink-0 text-[#3a3a3a]">
+                          <span className="shrink-0 text-[#505050]">
                             {formatBytes(entry.file.size)}
                           </span>
                         </li>
                       ))}
                       {extraCount > 0 && (
-                        <li className="text-xs text-[#3a3a3a]">
-                          +{extraCount} more
+                        <li className="text-xs text-[#505050] pt-1">
+                          +{extraCount} more files
                         </li>
                       )}
                     </ul>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  // @ts-expect-error webkitdirectory is non-standard but widely supported
+                  webkitdirectory="true"
+                  className="hidden"
+                  onChange={handleFileInput}
+                />
               </div>
 
               {/* Bottom-left: Validation */}

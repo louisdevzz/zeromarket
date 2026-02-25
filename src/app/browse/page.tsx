@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import SkillCard from "@/components/SkillCard";
-import { PACKAGES, CATEGORIES } from "@/lib/data";
+import { getAllPackages, CATEGORIES } from "@/lib/data";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; tag?: string; namespace?: string }>;
@@ -15,15 +15,18 @@ export default async function BrowsePage({ searchParams }: PageProps) {
   const tag = params.tag?.toLowerCase() ?? "";
   const ns = params.namespace?.toLowerCase() ?? "";
 
-  const filtered = PACKAGES.filter((p) => {
+  // Fetch real packages from database
+  const allPackages = await getAllPackages();
+
+  const filtered = allPackages.filter((p) => {
     if (ns && p.namespace !== ns) return false;
     if (tag && !p.tags.includes(tag)) return false;
     if (q) {
       return (
-        p.name.includes(q) ||
-        p.namespace.includes(q) ||
+        p.name.toLowerCase().includes(q) ||
+        p.namespace.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.includes(q))
+        p.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
     return true;
@@ -35,6 +38,9 @@ export default async function BrowsePage({ searchParams }: PageProps) {
     : tag
     ? CATEGORIES.find((c) => c.tag === tag)?.label ?? tag
     : null;
+
+  // Get unique namespaces for sidebar
+  const namespaces = [...new Set(allPackages.map((p) => p.namespace))];
 
   return (
     <div className="min-h-screen bg-[#080808]">
@@ -65,14 +71,14 @@ export default async function BrowsePage({ searchParams }: PageProps) {
             <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#505050] mb-3">Categories</p>
               <div className="space-y-0.5">
-                <FilterLink href="/browse" active={!activeTag} label="All skills" count={PACKAGES.length} />
+                <FilterLink href="/browse" active={!activeTag} label="All skills" count={allPackages.length} />
                 {CATEGORIES.map((cat) => (
                   <FilterLink
                     key={cat.tag}
                     href={`/browse?tag=${cat.tag}`}
                     active={tag === cat.tag}
                     label={`${cat.icon} ${cat.label}`}
-                    count={PACKAGES.filter((p) => p.tags.includes(cat.tag)).length}
+                    count={allPackages.filter((p) => p.tags.includes(cat.tag)).length}
                   />
                 ))}
               </div>
@@ -81,20 +87,17 @@ export default async function BrowsePage({ searchParams }: PageProps) {
             <div className="mt-6">
               <p className="text-xs font-semibold uppercase tracking-widest text-[#505050] mb-3">Namespace</p>
               <div className="space-y-0.5">
-                <FilterLink href="/browse" active={!ns} label="All" count={PACKAGES.length} />
-                <FilterLink
-                  href="/browse?namespace=zeroclaw"
-                  active={ns === "zeroclaw"}
-                  label="zeroclaw"
-                  count={PACKAGES.filter((p) => p.namespace === "zeroclaw").length}
-                  orange
-                />
-                <FilterLink
-                  href="/browse?namespace=community"
-                  active={ns === "community"}
-                  label="community"
-                  count={PACKAGES.filter((p) => p.namespace === "community").length}
-                />
+                <FilterLink href="/browse" active={!ns} label="All" count={allPackages.length} />
+                {namespaces.map((namespace) => (
+                  <FilterLink
+                    key={namespace}
+                    href={`/browse?namespace=${namespace}`}
+                    active={ns === namespace}
+                    label={namespace}
+                    count={allPackages.filter((p) => p.namespace === namespace).length}
+                    orange={namespace === "zeroclaw"}
+                  />
+                ))}
               </div>
             </div>
           </aside>
