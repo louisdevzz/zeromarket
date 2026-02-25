@@ -11,7 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { namespace, name } = await params;
-  const pkg = getPackage(namespace, name);
+  const pkg = await getPackage(namespace, name);
   if (!pkg) return { title: "Not Found" };
   return {
     title: `${namespace}/${name}`,
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PackagePage({ params }: PageProps) {
   const { namespace, name } = await params;
-  const pkg = getPackage(namespace, name);
+  const pkg = await getPackage(namespace, name);
   if (!pkg) notFound();
 
   return (

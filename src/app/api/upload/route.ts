@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { packages, tools } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { writeFile, mkdir } from "fs/promises";
+import { uploadToR2 } from "@/lib/r2";
 import path from "path";
 
 interface ManifestJson {
@@ -17,6 +17,20 @@ interface SessionUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+}
+
+function getContentType(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  switch (ext) {
+    case ".wasm":
+      return "application/wasm";
+    case ".json":
+      return "application/json";
+    case ".md":
+      return "text/markdown";
+    default:
+      return "application/octet-stream";
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -86,27 +100,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Save files to public/wasm/[namespace]/[slug]/[version]/
-  const baseDir = path.join(
-    process.cwd(),
-    "public",
-    "wasm",
-    namespace,
-    slug,
-    version
-  );
-
-  await mkdir(baseDir, { recursive: true });
-
+  // Upload files to R2: wasm/[namespace]/[slug]/[version]/
+  const baseKey = `wasm/${namespace}/${slug}/${version}`;
   const manifestEntries: { toolName: string; manifest: ManifestJson }[] = [];
 
   for (const file of fileEntries) {
-    // file.name may include sub-path — keep the basename only to prevent path traversal
     const basename = path.basename(file.name);
-    const dest = path.join(baseDir, basename);
-
+    const key = `${baseKey}/${basename}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(dest, buffer);
+    const contentType = getContentType(basename);
+
+    // Upload to R2
+    await uploadToR2(key, buffer, contentType);
 
     if (basename === "manifest.json" || basename.endsWith(".manifest.json")) {
       try {
@@ -134,9 +139,9 @@ export async function POST(request: NextRequest) {
         m.manifest.name === toolName
     );
     const description = matchedManifest?.manifest?.description ?? "";
-    const wasmUrl = `/wasm/${namespace}/${slug}/${version}/${wasmFile}`;
+    const wasmUrl = `${baseKey}/${wasmFile}`;
     const manifestFileName = `${toolName}.manifest.json`;
-    const manifestUrl = `/wasm/${namespace}/${slug}/${version}/${manifestFileName}`;
+    const manifestUrl = `${baseKey}/${manifestFileName}`;
     return { name: toolName, description, wasm_url: wasmUrl, manifest_url: manifestUrl };
   });
 

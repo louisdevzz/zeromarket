@@ -4,6 +4,7 @@ import { RegistryPackageIndex } from "@/lib/types";
 import { db } from "@/db";
 import { packages, tools } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getR2PublicUrl } from "@/lib/r2";
 
 interface RouteParams {
   params: Promise<{ namespace: string; name: string }>;
@@ -58,8 +59,8 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
         description: dbPkg.description ?? "",
         tools: dbTools.map((t) => ({
           name: t.name,
-          wasm_url: t.wasm_url,
-          manifest_url: t.manifest_url,
+          wasm_url: getR2PublicUrl(t.wasm_url),
+          manifest_url: getR2PublicUrl(t.manifest_url),
         })),
       };
     }
@@ -69,7 +70,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   // Fallback to mock data
   if (!body) {
-    const pkg = getPackage(namespace, name);
+    const pkg = await getPackage(namespace, name);
 
     if (!pkg) {
       return NextResponse.json(

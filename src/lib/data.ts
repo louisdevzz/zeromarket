@@ -1,4 +1,8 @@
 import { SkillPackage } from "./types";
+import { db } from "@/db";
+import { packages, tools } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { getR2PublicUrl } from "@/lib/r2";
 
 const BASE = "https://registry.zeromarket.dev/wasm";
 
@@ -216,8 +220,58 @@ Summarize any GitHub PR in one call.
   },
 ];
 
-export function getPackage(namespace: string, name: string): SkillPackage | undefined {
-  return PACKAGES.find((p) => p.namespace === namespace && p.name === name);
+function mapDbPackageToSkillPackage(
+  pkg: typeof packages.$inferSelect,
+  dbTools: (typeof tools.$inferSelect)[]
+): SkillPackage {
+  return {
+    namespace: pkg.namespace,
+    name: pkg.slug,
+    version: pkg.version,
+    description: pkg.description || "",
+    long_description: pkg.description || "",
+    tags: pkg.tags || [],
+    author: pkg.namespace,
+    downloads: pkg.downloads || 0,
+    published_at: pkg.created_at
+      ? new Date(pkg.created_at).toISOString().split("T")[0]
+      : "",
+    verified: pkg.verified || false,
+    readme: pkg.readme || "",
+    tools: dbTools.map((t) => ({
+      name: t.name,
+      description: t.description || "",
+      wasm_url: getR2PublicUrl(t.wasm_url),
+      manifest_url: getR2PublicUrl(t.manifest_url),
+    })),
+  };
+}
+
+export async function getPackage(
+  namespace: string,
+  name: string
+): Promise<SkillPackage | undefined> {
+  // First check hardcoded packages
+  const hardcoded = PACKAGES.find(
+    (p) => p.namespace === namespace && p.name === name
+  );
+  if (hardcoded) return hardcoded;
+
+  // Then check database
+  const pkg = await db.query.packages.findFirst({
+    where: and(
+      eq(packages.namespace, namespace),
+      eq(packages.slug, name)
+    ),
+  });
+
+  if (!pkg) return undefined;
+
+  const dbTools = await db.query.tools.findMany({
+    where: eq(tools.package_id, pkg.id),
+  });
+
+  return mapDbPackageToSkillPackage(pkg, dbTools);
 }
 
 export function searchPackages(query: string): SkillPackage[] {
@@ -229,6 +283,31 @@ export function searchPackages(query: string): SkillPackage[] {
       p.namespace.includes(q) ||
       p.description.toLowerCase().includes(q) ||
       p.tags.some((t) => t.includes(q))
+  );
+}
+
+export async function searchPackagesFromDB(query: string): Promise<SkillPackage[]> {
+  const allDbPackages = await db.query.packages.findMany({
+    with: {
+      tools: true,
+    },
+  });
+
+  const dbSkillPackages = allDbPackages.map((pkg) =>
+    mapDbPackageToSkillPackage(pkg, pkg.tools || [])
+  );
+
+  const allPackages = [...PACKAGES, ...dbSkillPackages];
+
+  if (!query) return allPackages;
+
+  const q = query.toLowerCase();
+  return allPackages.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.namespace.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.tags.some((t) => t.toLowerCase().includes(q))
   );
 }
 
