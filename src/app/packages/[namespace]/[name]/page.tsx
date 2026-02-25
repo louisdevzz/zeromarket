@@ -28,9 +28,10 @@ export default async function PackagePage({ params }: PageProps) {
   const pkg = await getPackage(namespace, name);
   if (!pkg) notFound();
 
-  // Check if current user is the owner
+  // Check if current user is the owner (compare GitHub login, not display name)
   const session = await auth();
-  const isOwner = session?.user?.name === namespace;
+  const sessionUser = session?.user as { username?: string } | undefined;
+  const isOwner = sessionUser?.username === namespace;
 
   return (
     <div className="min-h-screen bg-[#080808]">

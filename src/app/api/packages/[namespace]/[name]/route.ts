@@ -64,11 +64,12 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   if (pkg.tools && pkg.tools.length > 0) {
     for (const tool of pkg.tools) {
       try {
-        // Extract key from URL and delete
-        const wasmKey = tool.wasm_url.replace(/^https?:\/\/[^/]+\//, "");
-        const manifestKey = tool.manifest_url.replace(/^https?:\/\/[^/]+\//, "");
-        
-        await deleteFromR2(wasmKey);
+        await deleteFromR2(tool.wasm_url);
+        // Normalize legacy manifest key: old upload code stored `{toolName}.manifest.json`
+        // but the actual R2 file is `manifest.json`.
+        const manifestKey = tool.manifest_url.endsWith(`/${tool.name}.manifest.json`)
+          ? tool.manifest_url.slice(0, tool.manifest_url.lastIndexOf("/")) + "/manifest.json"
+          : tool.manifest_url;
         await deleteFromR2(manifestKey);
       } catch {
         // Continue even if R2 delete fails
