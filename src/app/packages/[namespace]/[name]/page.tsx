@@ -5,7 +5,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Navbar from "@/components/Navbar";
 import InstallCommand from "@/components/InstallCommand";
+import DeletePackageButton from "@/components/DeletePackageButton";
 import { getPackage, formatDownloads } from "@/lib/data";
+import { auth } from "@/lib/auth";
 
 interface PageProps {
   params: Promise<{ namespace: string; name: string }>;
@@ -25,6 +27,10 @@ export default async function PackagePage({ params }: PageProps) {
   const { namespace, name } = await params;
   const pkg = await getPackage(namespace, name);
   if (!pkg) notFound();
+
+  // Check if current user is the owner
+  const session = await auth();
+  const isOwner = session?.user?.name === namespace;
 
   return (
     <div className="min-h-screen bg-[#080808]">
@@ -154,6 +160,9 @@ export default async function PackagePage({ params }: PageProps) {
                 GET /api/v1/packages/{namespace}/{name}
               </code>
             </div>
+
+            {/* Delete button (only for owner) */}
+            <DeletePackageButton namespace={namespace} name={name} isOwner={isOwner} />
           </aside>
         </div>
       </div>

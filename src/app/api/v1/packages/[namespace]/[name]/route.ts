@@ -25,6 +25,20 @@ interface RouteParams {
  *   ]
  * }
  */
+
+/**
+ * Normalize legacy manifest_url values: the old upload code incorrectly stored
+ * `{toolName}.manifest.json` in the DB even when the actual R2 file was `manifest.json`.
+ * The zeroclaw skill template always generates `manifest.json`, so this normalization is safe.
+ */
+function normalizeManifestKey(manifestKey: string, toolName: string): string {
+  const brokenSuffix = `/${toolName}.manifest.json`;
+  if (manifestKey.endsWith(brokenSuffix)) {
+    return manifestKey.slice(0, manifestKey.lastIndexOf("/")) + "/manifest.json";
+  }
+  return manifestKey;
+}
+
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   const { namespace, name } = await params;
 
@@ -60,7 +74,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
         tools: dbTools.map((t) => ({
           name: t.name,
           wasm_url: getR2PublicUrl(t.wasm_url),
-          manifest_url: getR2PublicUrl(t.manifest_url),
+          manifest_url: getR2PublicUrl(normalizeManifestKey(t.manifest_url, t.name)),
         })),
       };
     }

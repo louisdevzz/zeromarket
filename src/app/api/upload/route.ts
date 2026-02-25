@@ -131,6 +131,8 @@ export async function POST(request: NextRequest) {
     .map((n) => path.basename(n))
     .filter((n) => n.endsWith(".wasm"));
 
+  const uploadedBasenames = fileEntries.map((f) => path.basename(f.name));
+
   const toolList = wasmFiles.map((wasmFile) => {
     const toolName = wasmFile.replace(".wasm", "");
     const matchedManifest = manifestEntries.find(
@@ -140,8 +142,12 @@ export async function POST(request: NextRequest) {
     );
     const description = matchedManifest?.manifest?.description ?? "";
     const wasmUrl = `${baseKey}/${wasmFile}`;
-    const manifestFileName = `${toolName}.manifest.json`;
-    const manifestUrl = `${baseKey}/${manifestFileName}`;
+    // Use the actual uploaded manifest filename so the DB key matches R2
+    const actualManifestFile =
+      uploadedBasenames.find((n) => n === `${toolName}.manifest.json`) ??
+      uploadedBasenames.find((n) => n === "manifest.json") ??
+      `${toolName}.manifest.json`;
+    const manifestUrl = `${baseKey}/${actualManifestFile}`;
     return { name: toolName, description, wasm_url: wasmUrl, manifest_url: manifestUrl };
   });
 
