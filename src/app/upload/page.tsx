@@ -16,6 +16,25 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** Files allowed in a skill package — source code and build artifacts are excluded. */
+const ALLOWED_FILENAMES = new Set([
+  "tool.wasm",
+  "manifest.json",
+  "SKILL.md",
+  "README.md",
+]);
+
+function isAllowedFile(relativePath: string): boolean {
+  const basename = relativePath.split("/").pop() ?? relativePath;
+  return ALLOWED_FILENAMES.has(basename);
+}
+
+function stripFolderPrefix(relativePath: string): string {
+  // webkitdirectory gives "folder/file.txt" — strip the outer folder prefix
+  const parts = relativePath.split("/");
+  return parts.length > 1 ? parts.slice(1).join("/") : relativePath;
+}
+
 function getValidationErrors(
   slug: string,
   displayName: string,
@@ -61,10 +80,12 @@ export default function UploadPage() {
     async (rawFiles: FileList | File[]) => {
       const entries: FileEntry[] = [];
       for (const file of Array.from(rawFiles)) {
-        // webkitRelativePath gives the full path including folder prefix
-        const relativePath =
+        const raw =
           (file as { webkitRelativePath?: string }).webkitRelativePath ||
           file.name;
+        // Strip outer folder prefix and filter to allowed files only
+        const relativePath = stripFolderPrefix(raw);
+        if (!isAllowedFile(relativePath)) continue;
         entries.push({ file, relativePath });
       }
 
@@ -281,8 +302,15 @@ export default function UploadPage() {
                       : "border-[#f97316]/40"
                   }`}
                 >
+                  <p className="text-sm font-medium text-[#a0a0a0] mb-1">
+                    Drop your skill folder here
+                  </p>
                   <p className="text-xs text-[#505050] mb-1">
-                    We keep folder paths and flatten the outer wrapper automatically.
+                    Only <span className="font-mono text-[#707070]">tool.wasm</span>,{" "}
+                    <span className="font-mono text-[#707070]">manifest.json</span>,{" "}
+                    <span className="font-mono text-[#707070]">SKILL.md</span>,{" "}
+                    <span className="font-mono text-[#707070]">README.md</span>{" "}
+                    will be uploaded — source code and build artifacts are filtered out automatically.
                   </p>
                   <button
                     type="button"
