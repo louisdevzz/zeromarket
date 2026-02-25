@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -35,14 +35,25 @@ function stripFolderPrefix(relativePath: string): string {
   return parts.length > 1 ? parts.slice(1).join("/") : relativePath;
 }
 
+function generateSlug(displayName: string): string {
+  return displayName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 function getValidationErrors(
   slug: string,
   displayName: string,
-  files: FileEntry[]
+  files: FileEntry[],
+  isDuplicate: boolean
 ): string[] {
   const errors: string[] = [];
   if (!slug.trim()) errors.push("Slug is required.");
   if (!displayName.trim()) errors.push("Display name is required.");
+  if (isDuplicate) errors.push("A skill with this name already exists in your namespace.");
   if (files.length === 0) errors.push("Add at least one file.");
   if (files.length > 0) {
     const hasWasm = files.some((f) => f.relativePath.endsWith(".wasm"));
@@ -64,6 +75,7 @@ export default function UploadPage() {
   const [version, setVersion] = useState("1.0.0");
   const [tagsInput, setTagsInput] = useState("");
   const [changelog, setChangelog] = useState("");
+  const [slugFromManifest, setSlugFromManifest] = useState(false);
 
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -72,9 +84,36 @@ export default function UploadPage() {
   const [uploading, setUploading] = useState(false);
   const [successUrl, setSuccessUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDuplicate, setIsDuplicate] = useState(false);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
-  const validationErrors = getValidationErrors(slug, displayName, files);
+  const validationErrors = getValidationErrors(slug, displayName, files, isDuplicate);
   const isValid = validationErrors.length === 0;
+
+  // Debounced slug duplicate check
+  useEffect(() => {
+    if (!slug.trim() || !session) {
+      setIsDuplicate(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingSlug(true);
+      try {
+        const res = await fetch(`/api/check-slug?slug=${encodeURIComponent(slug)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsDuplicate(data.exists);
+        }
+      } catch {
+        // Ignore network errors
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [slug, session]);
 
   const processFiles = useCallback(
     async (rawFiles: FileList | File[]) => {
@@ -101,7 +140,10 @@ export default function UploadPage() {
         try {
           const text = await manifestFile.file.text();
           const manifest = JSON.parse(text);
-          if (manifest.name && !slug) setSlug(manifest.name);
+          if (manifest.name && !slug) {
+            setSlug(manifest.name);
+            setSlugFromManifest(true);
+          }
           if (manifest.display_name && !displayName)
             setDisplayName(manifest.display_name);
           if (manifest.tags && Array.isArray(manifest.tags) && !tagsInput)
@@ -233,25 +275,32 @@ export default function UploadPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className={labelClass}>Slug</label>
-                    <input
-                      type="text"
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder="skill-name"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
                     <label className={labelClass}>Display Name</label>
                     <input
                       type="text"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={(e) => {
+                        const newDisplayName = e.target.value;
+                        setDisplayName(newDisplayName);
+                        if (!slugFromManifest) {
+                          setSlug(generateSlug(newDisplayName));
+                        }
+                      }}
                       placeholder="My Skill"
-                      className={inputClass}
+                      className={`${inputClass} ${isDuplicate ? "border-red-500/50" : ""}`}
                     />
+                    {isCheckingSlug && (
+                      <p className="text-[11px] text-[#505050] mt-1">
+                        Checking availability...
+                      </p>
+                    )}
+                    {isDuplicate && (
+                      <p className="text-[11px] text-red-400 mt-1">
+                        A skill with this name already exists in your namespace.
+                      </p>
+                    )}
                   </div>
+
                   <div>
                     <label className={labelClass}>Version</label>
                     <input
